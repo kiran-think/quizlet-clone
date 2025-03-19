@@ -38,7 +38,9 @@ export default function ChatWithFiles() {
   const [quizeGenerated, setQuizGenerated] = useState(false);
   const [quiz, setQuiz] = useState();
   const [flashcards, setFlashcards] = useState([]);
-  const [matches, setMatches] = useState();
+  // const [matches, setMatches] = useState();
+  const [matches, setMatches] = useState<{ data: any[] } | any[]>([]);
+
 
   const {
     submit,
@@ -90,7 +92,9 @@ export default function ChatWithFiles() {
 
   const handleSubmitWithFiles = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    let encodedFiles;
+    // let encodedFiles;
+    const encodedFiles: File[] = []; // Default to an empty array
+
     setLoading(true);
     try {
       // encodedFiles = await Promise.all(
@@ -200,7 +204,12 @@ export default function ChatWithFiles() {
       setQuizGenerated(true);
       setLoading(false)
     }
-    const generatedTitle = await generateQuizTitle(encodedFiles[0].name);
+    if (!encodedFiles || encodedFiles?.length === 0) {
+      console.error("No files found in encodedFiles");
+      return;
+    }
+    
+    const generatedTitle = await generateQuizTitle(encodedFiles[0]?.name);
     setTitle(generatedTitle);
   };
 

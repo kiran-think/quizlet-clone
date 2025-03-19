@@ -8,6 +8,10 @@ interface Card {
   matched: boolean; // Whether the card has been matched
 }
 
+interface MatchItem {
+    term: string;
+    definition: string;
+  }
 export default function QuizGameComponent(data: any) {
   const [cards, setCards] = useState<Card[]>([]);
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
@@ -15,26 +19,30 @@ export default function QuizGameComponent(data: any) {
   const [isRunning, setIsRunning] = useState<boolean>(false);
 
   // Transform the data
-  const quizData = data?.data?.map((item) => ({
+  const quizData = data?.data?.map((item:MatchItem) => ({
     question: item.term,
     answer: item.definition,
   }));
 
   // Initialize cards with shuffled questions and answers
   useEffect(() => {
-    const questionCards: Card[] = quizData?.map((item, index) => ({
-      id: index,
-      type: 'question',
-      content: item.question,
-      matched: false,
-    }));
-
-    const answerCards: Card[] = quizData?.map((item, index) => ({
-      id: index + quizData?.length, // Ensure unique IDs
-      type: 'answer',
-      content: item.answer,
-      matched: false,
-    }));
+    const questionCards: Card[] = quizData?.map(
+        (item: { question: string; answer: string }, index:number) => ({
+          id: index,
+          type: "question",
+          content: item.question,
+          matched: false,
+        })
+      );
+      
+    const answerCards: Card[] = quizData?.map(
+        (item: { question: string; answer: string }, index: number) => ({
+          id: index + (quizData?.length || 0), // Ensure unique IDs
+          type: "answer",
+          content: item.answer,
+          matched: false,
+        })
+      );
 
     const shuffledCards = [...questionCards, ...answerCards].sort(
       () => Math.random() - 0.5
@@ -74,23 +82,27 @@ export default function QuizGameComponent(data: any) {
         const secondCard = cards.find((card) => card.id === id);
 
         if (
-          (firstCard?.type === 'question' &&
-            secondCard?.type === 'answer' &&
-            quizData.find((item) => item.question === firstCard.content)
-              ?.answer === secondCard.content) ||
-          (firstCard?.type === 'answer' &&
-            secondCard?.type === 'question' &&
-            quizData.find((item) => item.answer === firstCard.content)
-              ?.question === secondCard.content)
-        ) {
-          setCards((prevCards) =>
-            prevCards.map((card) =>
-              card.id === firstCard?.id || card.id === secondCard?.id
-                ? { ...card, matched: true }
-                : card
+            quizData &&
+            (
+              (firstCard?.type === "question" &&
+                secondCard?.type === "answer" &&
+                quizData.find((item:{question:string,content:string}) => item.question === firstCard?.content)?.answer ===
+                  secondCard?.content) ||
+              (firstCard?.type === "answer" &&
+                secondCard?.type === "question" &&
+                quizData.find((item:{answer:string}) => item.answer === firstCard?.content)?.question ===
+                  secondCard?.content)
             )
-          );
-        }
+          ) {
+            setCards((prevCards) =>
+              prevCards.map((card) =>
+                card.id === firstCard?.id || card.id === secondCard?.id
+                  ? { ...card, matched: true }
+                  : card
+              )
+            );
+          }
+          
 
         setTimeout(() => setSelectedCards([]), 1000);
       }
